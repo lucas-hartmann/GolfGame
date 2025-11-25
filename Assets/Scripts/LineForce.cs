@@ -6,7 +6,9 @@ public class LineForce : MonoBehaviour
     [SerializeField] private float shotPower;
     [SerializeField] private float stopVelocity = .05f;
     [SerializeField] private LineRenderer lineRenderer;
+
     [SerializeField] private ScoreSystem scoreSystem;
+    [SerializeField] private SoundManager soundManager;
 
     private Vector3 lastSafePosition;
 
@@ -69,6 +71,7 @@ public class LineForce : MonoBehaviour
 
         rigidbody.AddForce(direction * strength * shotPower);
         scoreSystem.AddStroke(1);
+        soundManager.ShotSound();
         //isIdle = false;
     }
 

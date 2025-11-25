@@ -5,6 +5,8 @@ using UnityEngine.SceneManagement;
 
 public class ScoreSystem : MonoBehaviour
 {
+    [SerializeField] private float par;
+
     public int score = 0;
     private int stroke = 0;
 
@@ -49,7 +51,47 @@ public class ScoreSystem : MonoBehaviour
     public void EndGame(){
         gameVictoryUI.SetActive(true);
         buttonUI.SetActive(true);
-        result.text = "In " + stroke + " stroke(s)!";
+        CalcResText();
+        //result.text = "In " + stroke + " stroke(s)!";
+
+    }
+
+    public void CalcResText()
+    {
+        int diff = stroke - (int)par;
+        string resultText = "";
+
+        if (stroke == 1)
+        {
+            resultText = "Hole-in-One!";
+        }
+        else
+        {
+            switch (diff)
+            {
+                case -2:
+                    resultText = "Eagle!";
+                    break;
+                case -1:
+                    resultText = "Birdie!";
+                    break;
+                case 0:
+                    resultText = "Par!";
+                    break;
+                case 1:
+                    resultText = "Bogey!";
+                    break;
+                default:
+                    if (diff > 1)
+                        resultText = diff + " over Par";
+                    else
+                        resultText = (-diff) + " under Par";
+                    break;
+            }
+        }
+
+        //result.text = resultText + "\nIn " + stroke + " stroke(s)!";
+        result.text = resultText;
 
     }
 }
