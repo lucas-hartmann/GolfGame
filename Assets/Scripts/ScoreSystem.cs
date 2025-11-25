@@ -10,8 +10,12 @@ public class ScoreSystem : MonoBehaviour
 
     public TMP_Text scoreBar;
     public TMP_Text strokesBar;
-    public TMP_Text endScreen;
     public TMP_Text result;
+
+    public GameObject gameVictoryUI;
+    public GameObject gameOverUI;
+    public GameObject buttonUI;
+
 
 
     void Start()
@@ -37,15 +41,15 @@ public class ScoreSystem : MonoBehaviour
     }
 
     public void GameOver(){
-        endScreen.text = "GAME OVER!";
+        gameOverUI.SetActive(true);
+        buttonUI.SetActive(true);
 
-        //SceneManager.LoadScene("Level 1");
     }
 
     public void EndGame(){
-        endScreen.text = "YOU WIN!";
+        gameVictoryUI.SetActive(true);
+        buttonUI.SetActive(true);
         result.text = "In " + stroke + " stroke(s)!";
 
-        //SceneManager.LoadScene("Level 2");
     }
 }

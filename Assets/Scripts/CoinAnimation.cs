@@ -5,7 +5,9 @@ public class CoinAnimation : MonoBehaviour
     [SerializeField] private float rotationSpeed = 90f;
     [SerializeField] private float floatAmplitude = 0.25f;
     [SerializeField] private float floatFrequency = 2f;
+
     [SerializeField] private ScoreSystem scoreSystem;
+    [SerializeField] private SoundManager soundManager;
 
     private Vector3 startPosition;
 
@@ -35,6 +37,7 @@ public class CoinAnimation : MonoBehaviour
         {
             if (other.CompareTag("Player"))
             {
+                soundManager.CoinSound();
                 Destroy(gameObject);
                 scoreSystem.AddScore(100);
             }
