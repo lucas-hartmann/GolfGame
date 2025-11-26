@@ -1,12 +1,18 @@
-using UnityEngine;
-using TMPro;
+﻿using UnityEngine;
 
 public class LineForce : MonoBehaviour
 {
-    [SerializeField] private float shotPower;
-    [SerializeField] private float stopVelocity = .05f;
+    [Header("Shot Settings")]
+    [SerializeField] private float shotPower = 6f;
+    [SerializeField] private float stopVelocity = 0.05f;
+    [SerializeField] private float minDragDistance = 0.3f;
+    [SerializeField] private float maxDragDistance = 3f;
+
+    [Header("References")]
     [SerializeField] private LineRenderer lineRenderer;
     [SerializeField] private ScoreSystem scoreSystem;
+    [SerializeField] private Camera aimCamera;
+    [SerializeField] private LayerMask aimLayerMask = ~0;
 
     private Vector3 lastSafePosition;
 
@@ -15,93 +21,134 @@ public class LineForce : MonoBehaviour
 
     private Rigidbody rigidbody;
 
-    private void Awake() {
-
+    private void Awake()
+    {
         rigidbody = GetComponent<Rigidbody>();
 
+        if (aimCamera == null)
+        {
+            aimCamera = Camera.main;
+        }
+
         isAiming = false;
-        lineRenderer.enabled = false;
+        isIdle = false;
+
+        if (lineRenderer != null)
+            lineRenderer.enabled = false;
     }
 
-    private void Update() {
+    private void Start()
+    {
+        // At start the ball is usually not moving, so mark it idle
+        if (rigidbody.linearVelocity.magnitude < stopVelocity)
+        {
+            isIdle = true;
+        }
+    }
 
-        if (rigidbody.linearVelocity.magnitude < stopVelocity) {
+    private void Update()
+    {
+        // When the ball slows down enough, mark it idle again
+        if (!isIdle && rigidbody.linearVelocity.magnitude < stopVelocity)
+        {
             Stop();
+        }
+
+        // Start aiming by clicking anywhere on the screen if the ball is idle
+        if (isIdle && Input.GetMouseButtonDown(0))
+        {
+            isAiming = true;
         }
 
         ProcessAim();
     }
 
-    private void OnMouseDown() {
-        if (isIdle) {
-            isAiming = true;
+    private void ProcessAim()
+    {
+        if (!isAiming || !isIdle)
+            return;
+
+        Vector3? hitPointNullable = CastMouseClickRay();
+        if (!hitPointNullable.HasValue)
+            return;
+
+        Vector3 hitPoint = hitPointNullable.Value;
+
+        // Point on the same height as the ball (used for physics)
+        Vector3 targetOnBallHeight = new Vector3(hitPoint.x, transform.position.y, hitPoint.z);
+
+        // Draw line exactly to the raycast hit (so it matches the cursor)
+        DrawLine(hitPoint);
+
+        if (Input.GetMouseButtonUp(0))
+        {
+            Shoot(targetOnBallHeight);
         }
     }
 
-    private void ProcessAim() {
-        if(!isAiming || !isIdle){
-            return;
-        }
-
-        Vector3? worldPoint = CastMouseClickRay();
-
-        if (!worldPoint.HasValue) {
-            return;
-        }
-
-        DrawLine(worldPoint.Value);
-
-        if(Input.GetMouseButtonUp(0)){
-            Shoot(worldPoint.Value);
-        }
-    }
-
-    private void Shoot(Vector3 worldPoint){
+    private void Shoot(Vector3 targetOnBallHeight)
+    {
         lastSafePosition = transform.position;
 
+        Vector3 diff = targetOnBallHeight - transform.position;
+        float strength = diff.magnitude;
+
+        // Clamp drag distance so you cannot over-power it
+        strength = Mathf.Clamp(strength, 0f, maxDragDistance);
+
+        // Minimum drag check: treat tiny drags as "no shot"
+        if (strength < minDragDistance)
+        {
+            isAiming = false;
+            if (lineRenderer != null) lineRenderer.enabled = false;
+            return;
+        }
+
+        Vector3 direction = diff.normalized;
+
         isAiming = false;
-        lineRenderer.enabled = false;
+        isIdle = false; // lock shooting while ball is moving
+        if (lineRenderer != null) lineRenderer.enabled = false;
 
-        Vector3 horizontalWorldPoint = new Vector3(worldPoint.x, transform.position.y, worldPoint.z);
-
-        Vector3 direction = (horizontalWorldPoint - transform.position).normalized;
-        float strength = Vector3.Distance(transform.position, horizontalWorldPoint);
-
+        // Same AddForce style as before (default Force mode)
         rigidbody.AddForce(direction * strength * shotPower);
         scoreSystem.AddStroke(1);
-        //isIdle = false;
     }
 
-    private void DrawLine(Vector3 worldPoint) {
-        Vector3[] positions = {transform.position, worldPoint};
+    private void DrawLine(Vector3 worldPoint)
+    {
+        if (lineRenderer == null) return;
+
         lineRenderer.positionCount = 2;
-            lineRenderer.SetPosition(0, transform.position);
-            lineRenderer.SetPosition(1, worldPoint);
-            lineRenderer.enabled = true;
+        lineRenderer.SetPosition(0, transform.position);
+        lineRenderer.SetPosition(1, worldPoint);
+        lineRenderer.enabled = true;
     }
 
-    private void Stop(){
+    private void Stop()
+    {
         rigidbody.linearVelocity = Vector3.zero;
         rigidbody.angularVelocity = Vector3.zero;
-        isIdle = true; 
+        isIdle = true;
     }
 
-    private Vector3? CastMouseClickRay() {
-        Vector3 screenMousePosNear = new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.nearClipPlane);
-        Vector3 screenMousePosFar = new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.farClipPlane);
-
-        Vector3 worldMousePosNear = Camera.main.ScreenToWorldPoint(screenMousePosNear);
-        Vector3 worldMousePosFar = Camera.main.ScreenToWorldPoint(screenMousePosFar);
-
-        RaycastHit hit;
-        if (Physics.Raycast(worldMousePosNear, worldMousePosFar - worldMousePosNear, out hit, Mathf.Infinity)) {
-            return hit.point;
-        } else {
+    private Vector3? CastMouseClickRay()
+    {
+        if (aimCamera == null)
             return null;
+
+        Ray ray = aimCamera.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hit;
+
+        if (Physics.Raycast(ray, out hit, 1000f, aimLayerMask))
+        {
+            return hit.point;
         }
+
+        return null;
     }
-    
-    //OutOfBounds stuff
+
+    // Out-of-bounds stuff
     private void OnTriggerExit(Collider other)
     {
         if (other.CompareTag("Bounds"))
@@ -117,5 +164,4 @@ public class LineForce : MonoBehaviour
         transform.position = lastSafePosition;
         isIdle = true;
     }
-
 }
