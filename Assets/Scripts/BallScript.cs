@@ -18,7 +18,10 @@ public class LineForceKeyboard : MonoBehaviour
 
     [Header("References")]
     [SerializeField] private LineRenderer lineRenderer;
-    [SerializeField] private ScoreSystem scoreSystem;
+
+    // neu: Referenz auf GameManager
+    [Header("Game Manager")]
+    [SerializeField] private GameManager gameManager;
 
     private Vector3 lastSafePosition;
     private bool isIdle = false;
@@ -37,6 +40,14 @@ public class LineForceKeyboard : MonoBehaviour
 
         if (lineRenderer != null)
             lineRenderer.enabled = false;
+
+        // Falls im Inspector keine GameManager-Referenz gesetzt wurde, versuchen wir sie zu finden
+        if (gameManager == null)
+        {
+            gameManager = FindObjectOfType<GameManager>();
+            if (gameManager == null)
+                Debug.LogWarning("LineForceKeyboard: Kein GameManager gefunden. Setze die Referenz im Inspector, wenn nötig.");
+        }
 
         currentPower = Mathf.Clamp((minPower + maxPower) * 0.5f, minPower, maxPower);
         currentAngleDegrees = 0f;
@@ -130,8 +141,11 @@ public class LineForceKeyboard : MonoBehaviour
 
         rb.AddForce(direction * strength * shotPowerMultiplier, ForceMode.Impulse);
 
-        if (scoreSystem != null)
-            scoreSystem.AddStroke(1);
+        // neu: GameManager benachrichtigen
+        if (gameManager != null)
+        {
+            gameManager.RegisterShot();
+        }
     }
 
     private void DrawAimLine()
@@ -154,6 +168,11 @@ public class LineForceKeyboard : MonoBehaviour
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
         isIdle = true;
+
+        if (gameManager != null && gameManager.GetCurrentShots() >= gameManager.maxShots)
+        {
+            gameManager.LoseGame();
+        }
     }
 
     private void CancelAiming()

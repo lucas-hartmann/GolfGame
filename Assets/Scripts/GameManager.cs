@@ -4,8 +4,24 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
+    [Header("Menus")]
     [SerializeField] GameObject PauseEndMenu;
+    [SerializeField] GameObject WinMenu;
+    [SerializeField] GameObject LoseMenu;
 
+    [Header("Keine Ahnung wia i des denn nenn")]
+    [SerializeField] public int maxShots = 6;
+    [SerializeField] public int coinsCollected = 0;
+    public int currentShots = 0;
+
+    [Header("UI Stuff")]
+    public TMP_Text shots;
+    public TMP_Text coins;
+
+    void Start(){
+        shots.text = currentShots + "/" + maxShots;
+        coins.text = coinsCollected.ToString();
+    }
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
@@ -30,14 +46,42 @@ public class GameManager : MonoBehaviour
     public void Exit()
     {
         Time.timeScale = 1f;
-        SceneManager.LoadScene("Level Selector");
+        SceneManager.LoadScene("MainMenu");
     }
 
-    public void RestartLevel()
+    public void WinGame()
     {
-        //Time.timeScale = 1f;
-        Debug.Log("peach3");
-        //Scene currentScene = SceneManager.GetActiveScene();
-        SceneManager.LoadScene("Level 1");
+        Debug.Log("WinMenu aufgerufen");
+        Time.timeScale = 0f;
+        WinMenu.SetActive(true);
+    }
+
+    public void LoseGame()
+    {
+        Debug.Log("LoseMenu aufgerufen");
+        Time.timeScale = 0f;
+        LoseMenu.SetActive(true);
+    }
+
+    // neu: Methode zum Erhöhen der Schüsse
+    public void RegisterShot()
+    {
+        currentShots++;
+        Debug.Log($"Shots: {currentShots}/{maxShots}");
+        shots.text = currentShots + "/" + maxShots;
+    }
+
+    // optional: öffentliche Zugriffsmethode, falls du die Anzahl an anderen Orten brauchst
+    public int GetCurrentShots()
+    {
+        return currentShots;
+    }
+
+    public void CoinCollected()
+    {
+        coinsCollected++;
+        //Debug.Log($"Coins collected: {coinsCollected}/{amountToSpawn}");
+        coins.text = coinsCollected.ToString();
+
     }
 }

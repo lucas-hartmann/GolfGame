@@ -1,17 +1,21 @@
 using UnityEngine;
 
-public class CoinAnimation : MonoBehaviour
+public class CoinScript : MonoBehaviour
 {
     [SerializeField] private float rotationSpeed = 90f;
     [SerializeField] private float floatAmplitude = 0.25f;
     [SerializeField] private float floatFrequency = 2f;
-    [SerializeField] private ScoreSystem scoreSystem;
+
+    [SerializeField] private GameManager gameManager;
 
     private Vector3 startPosition;
 
     private void Start()
     {
         startPosition = transform.position;
+        gameManager = FindObjectOfType<GameManager>();
+        if (gameManager == null)
+            Debug.LogError("Kein GameManager im Level gefunden!");
     }
 
     private void Update()
@@ -32,11 +36,15 @@ public class CoinAnimation : MonoBehaviour
     }
 
     private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Player"))
         {
-            if (other.CompareTag("Player"))
+            if (gameManager != null)
             {
-                Destroy(gameObject);
-                scoreSystem.AddScore(100);
+                gameManager.CoinCollected();
             }
+
+            Destroy(gameObject);
         }
+    }
 }
