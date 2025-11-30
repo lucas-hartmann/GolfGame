@@ -35,17 +35,4 @@ public class CoinManager : MonoBehaviour
             Instantiate(collectablePrefab, points[i].position, points[i].rotation);
         }
     }
-
-    public void CoinCollected()
-    {
-        coinsCollected++;
-        Debug.Log($"Coins collected: {coinsCollected}/{amountToSpawn}");
-
-        // Optional Win Condition
-        if (coinsCollected >= amountToSpawn)
-        {
-            Debug.Log("Alle Coins gesammelt!");
-            // Hier später WinGame() / Tür öffnen / LevelComplete etc.
-        }
-    }
 }

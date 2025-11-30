@@ -63,7 +63,6 @@ public class GameManager : MonoBehaviour
         LoseMenu.SetActive(true);
     }
 
-    // neu: Methode zum Erhöhen der Schüsse
     public void RegisterShot()
     {
         currentShots++;
@@ -71,7 +70,7 @@ public class GameManager : MonoBehaviour
         shots.text = currentShots + "/" + maxShots;
     }
 
-    // optional: öffentliche Zugriffsmethode, falls du die Anzahl an anderen Orten brauchst
+
     public int GetCurrentShots()
     {
         return currentShots;

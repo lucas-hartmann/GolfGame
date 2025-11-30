@@ -19,7 +19,6 @@ public class LineForceKeyboard : MonoBehaviour
     [Header("References")]
     [SerializeField] private LineRenderer lineRenderer;
 
-    // neu: Referenz auf GameManager
     [Header("Game Manager")]
     [SerializeField] private GameManager gameManager;
 
@@ -41,7 +40,6 @@ public class LineForceKeyboard : MonoBehaviour
         if (lineRenderer != null)
             lineRenderer.enabled = false;
 
-        // Falls im Inspector keine GameManager-Referenz gesetzt wurde, versuchen wir sie zu finden
         if (gameManager == null)
         {
             gameManager = FindObjectOfType<GameManager>();
@@ -141,7 +139,6 @@ public class LineForceKeyboard : MonoBehaviour
 
         rb.AddForce(direction * strength * shotPowerMultiplier, ForceMode.Impulse);
 
-        // neu: GameManager benachrichtigen
         if (gameManager != null)
         {
             gameManager.RegisterShot();
