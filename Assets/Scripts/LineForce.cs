@@ -1,110 +1,169 @@
 using UnityEngine;
-using TMPro;
 
-public class LineForce : MonoBehaviour
+public class LineForceKeyboard : MonoBehaviour
 {
-    [SerializeField] private float shotPower;
-    [SerializeField] private float stopVelocity = .05f;
+    [Header("Shot Settings")]
+    [SerializeField] private float shotPowerMultiplier = 6f;
+    [SerializeField] private float stopVelocity = 0.05f;
+    [SerializeField] private float minShotPower = 0.3f;
+    [SerializeField] private float maxVisualDistance = 3f;
+
+    [Header("Keyboard Aim Settings")]
+    [SerializeField] private float minPower = 0.5f;
+    [SerializeField] private float maxPower = 3f;
+    [SerializeField] private float powerSpeed = 1.0f;
+    [SerializeField] private float angleSpeed = 60f;
+    [SerializeField] private KeyCode shootKey = KeyCode.Space;
+    [SerializeField] private KeyCode cancelKey = KeyCode.Escape;
+
+    [Header("References")]
     [SerializeField] private LineRenderer lineRenderer;
 
     [SerializeField] private ScoreSystem scoreSystem;
     [SerializeField] private SoundManager soundManager;
 
     private Vector3 lastSafePosition;
+    private bool isIdle = false;
+    private bool isAiming = false;
 
-    private bool isIdle;
-    private bool isAiming;
+    private Rigidbody rb;
 
-    private Rigidbody rigidbody;
+    private float currentPower;
+    private float currentAngleDegrees;
 
-    private void Awake() {
+    private void Awake()
+    {
+        rb = GetComponent<Rigidbody>();
+        if (rb == null)
+            Debug.LogError("LineForceKeyboard: Kein Rigidbody gefunden!");
 
-        rigidbody = GetComponent<Rigidbody>();
+        if (lineRenderer != null)
+            lineRenderer.enabled = false;
 
-        isAiming = false;
-        lineRenderer.enabled = false;
+        currentPower = Mathf.Clamp((minPower + maxPower) * 0.5f, minPower, maxPower);
+        currentAngleDegrees = 0f;
     }
 
-    private void Update() {
-
-        if (rigidbody.linearVelocity.magnitude < stopVelocity) {
-            Stop();
-        }
-
-        ProcessAim();
+    private void Start()
+    {
+        if (rb != null && rb.linearVelocity.magnitude < stopVelocity)
+            isIdle = true;
     }
 
-    private void OnMouseDown() {
-        if (isIdle) {
-            isAiming = true;
+    private void Update()
+    {
+        if (rb != null && !isIdle && rb.linearVelocity.magnitude < stopVelocity)
+            StopBall();
+
+        if (isIdle && !isAiming)
+        {
+            if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D))
+            {
+                isAiming = true;
+                if (lineRenderer != null) lineRenderer.enabled = true;
+            }
+        }
+
+        if (isAiming && isIdle)
+        {
+            ProcessKeyboardAim();
+        }
+
+        if (isAiming && Input.GetKeyDown(cancelKey))
+        {
+            CancelAiming();
         }
     }
 
-    private void ProcessAim() {
-        if(!isAiming || !isIdle){
-            return;
-        }
+    private void ProcessKeyboardAim()
+    {
+        float angleDelta = 0f;
+        if (Input.GetKey(KeyCode.A)) angleDelta -= angleSpeed * Time.deltaTime;
+        if (Input.GetKey(KeyCode.D)) angleDelta += angleSpeed * Time.deltaTime;
+        currentAngleDegrees = Mathf.Repeat(currentAngleDegrees + angleDelta, 360f);
 
-        Vector3? worldPoint = CastMouseClickRay();
+        float powerDelta = 0f;
+        if (Input.GetKey(KeyCode.W)) powerDelta += powerSpeed * Time.deltaTime;
+        if (Input.GetKey(KeyCode.S)) powerDelta -= powerSpeed * Time.deltaTime;
+        currentPower = Mathf.Clamp(currentPower + powerDelta, minPower, maxPower);
 
-        if (!worldPoint.HasValue) {
-            return;
-        }
+        DrawAimLine();
 
-        DrawLine(worldPoint.Value);
+        if (Input.GetKeyDown(shootKey))
+        {
+            if (currentPower < minShotPower)
+            {
+                CancelAiming();
+                return;
+            }
 
-        if(Input.GetMouseButtonUp(0)){
-            Shoot(worldPoint.Value);
+            Vector3 dir = AngleToDirection(currentAngleDegrees);
+            Vector3 targetOnBallHeight = transform.position + dir * currentPower;
+            Shoot(targetOnBallHeight);
         }
     }
 
-    private void Shoot(Vector3 worldPoint){
+    private Vector3 AngleToDirection(float degrees)
+    {
+        float rad = degrees * Mathf.Deg2Rad;
+        return new Vector3(Mathf.Sin(rad), 0f, Mathf.Cos(rad)).normalized;
+    }
+
+    private void Shoot(Vector3 targetOnBallHeight)
+    {
         lastSafePosition = transform.position;
 
-        isAiming = false;
-        lineRenderer.enabled = false;
+        Vector3 diff = targetOnBallHeight - transform.position;
+        float strength = diff.magnitude;
+        strength = Mathf.Clamp(strength, 0f, maxVisualDistance);
 
-        Vector3 horizontalWorldPoint = new Vector3(worldPoint.x, transform.position.y, worldPoint.z);
-
-        Vector3 direction = (horizontalWorldPoint - transform.position).normalized;
-        float strength = Vector3.Distance(transform.position, horizontalWorldPoint);
-
-        rigidbody.AddForce(direction * strength * shotPower);
-        scoreSystem.AddStroke(1);
-        soundManager.ShotSound();
-        //isIdle = false;
-    }
-
-    private void DrawLine(Vector3 worldPoint) {
-        Vector3[] positions = {transform.position, worldPoint};
-        lineRenderer.positionCount = 2;
-            lineRenderer.SetPosition(0, transform.position);
-            lineRenderer.SetPosition(1, worldPoint);
-            lineRenderer.enabled = true;
-    }
-
-    private void Stop(){
-        rigidbody.linearVelocity = Vector3.zero;
-        rigidbody.angularVelocity = Vector3.zero;
-        isIdle = true; 
-    }
-
-    private Vector3? CastMouseClickRay() {
-        Vector3 screenMousePosNear = new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.nearClipPlane);
-        Vector3 screenMousePosFar = new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.farClipPlane);
-
-        Vector3 worldMousePosNear = Camera.main.ScreenToWorldPoint(screenMousePosNear);
-        Vector3 worldMousePosFar = Camera.main.ScreenToWorldPoint(screenMousePosFar);
-
-        RaycastHit hit;
-        if (Physics.Raycast(worldMousePosNear, worldMousePosFar - worldMousePosNear, out hit, Mathf.Infinity)) {
-            return hit.point;
-        } else {
-            return null;
+        if (strength < minShotPower)
+        {
+            isAiming = false;
+            if (lineRenderer != null) lineRenderer.enabled = false;
+            return;
         }
+
+        Vector3 direction = diff.normalized;
+
+        isAiming = false;
+        isIdle = false;
+        if (lineRenderer != null) lineRenderer.enabled = false;
+
+        rb.AddForce(direction * strength * shotPowerMultiplier, ForceMode.Impulse);
+
+        if (scoreSystem != null)
+            scoreSystem.AddStroke(1);
     }
-    
-    //OutOfBounds stuff
+
+    private void DrawAimLine()
+    {
+        if (lineRenderer == null) return;
+
+        Vector3 start = transform.position;
+        Vector3 dir = AngleToDirection(currentAngleDegrees);
+        float visualLength = Mathf.Clamp(currentPower, 0f, maxVisualDistance);
+        Vector3 end = start + dir * visualLength;
+
+        lineRenderer.positionCount = 2;
+        lineRenderer.SetPosition(0, start);
+        lineRenderer.SetPosition(1, end);
+        lineRenderer.enabled = true;
+    }
+
+    private void StopBall()
+    {
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+        isIdle = true;
+    }
+
+    private void CancelAiming()
+    {
+        isAiming = false;
+        if (lineRenderer != null) lineRenderer.enabled = false;
+    }
+
     private void OnTriggerExit(Collider other)
     {
         if (other.CompareTag("Bounds"))
@@ -115,10 +174,10 @@ public class LineForce : MonoBehaviour
 
     private void ResetToLastSafePosition()
     {
-        rigidbody.linearVelocity = Vector3.zero;
-        rigidbody.angularVelocity = Vector3.zero;
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
         transform.position = lastSafePosition;
         isIdle = true;
+        CancelAiming();
     }
-
 }
