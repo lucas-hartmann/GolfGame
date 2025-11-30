@@ -14,7 +14,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // Toggle Pause-Menü
     private void TogglePause()
     {
         bool isActive = PauseEndMenu.activeSelf;
@@ -22,7 +21,6 @@ public class GameManager : MonoBehaviour
         Time.timeScale = !isActive ? 0f : 1f;
     }
 
-    // Methoden für Buttons im Menü
     public void Resume()
     {
         PauseEndMenu.SetActive(false);
@@ -31,14 +29,15 @@ public class GameManager : MonoBehaviour
 
     public void Exit()
     {
-        Time.timeScale = 1f; // Zeit zurücksetzen
-        SceneManager.LoadScene("LevelSelector");
-        Debug.Log("peach");
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("Level Selector");
     }
 
     public void RestartLevel()
     {
-        Time.timeScale = 1f; // Zeit zurücksetzen
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        //Time.timeScale = 1f;
+        Debug.Log("peach3");
+        //Scene currentScene = SceneManager.GetActiveScene();
+        SceneManager.LoadScene("Level 1");
     }
 }
