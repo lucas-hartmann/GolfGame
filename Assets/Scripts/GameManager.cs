@@ -12,11 +12,13 @@ public class GameManager : MonoBehaviour
     [Header("Keine Ahnung wia i des denn nenn")]
     [SerializeField] public int maxShots = 6;
     [SerializeField] public int coinsCollected = 0;
+    [SerializeField] private float par = 2;
     public int currentShots = 0;
 
     [Header("UI Stuff")]
     public TMP_Text shots;
     public TMP_Text coins;
+    public TMP_Text result;
 
     void Start(){
         shots.text = currentShots + "/" + maxShots;
@@ -52,6 +54,7 @@ public class GameManager : MonoBehaviour
     public void WinGame()
     {
         Debug.Log("WinMenu aufgerufen");
+        CalcResText();
         Time.timeScale = 0f;
         WinMenu.SetActive(true);
     }
@@ -83,4 +86,42 @@ public class GameManager : MonoBehaviour
         coins.text = coinsCollected.ToString();
 
     }
+        public void CalcResText()
+        {
+            int diff = currentShots - (int)par;
+            string resultText = "";
+
+            if (currentShots == 1)
+            {
+                resultText = "Hole-in-One!";
+            }
+            else
+            {
+                switch (diff)
+                {
+                    case -2:
+                        resultText = "Eagle!";
+                        break;
+                    case -1:
+                        resultText = "Birdie!";
+                        break;
+                    case 0:
+                        resultText = "Par!";
+                        break;
+                    case 1:
+                        resultText = "Bogey!";
+                        break;
+                    default:
+                        if (diff > 1)
+                            resultText = diff + " over Par";
+                        else
+                            resultText = (-diff) + " under Par";
+                        break;
+                }
+            }
+
+            result.text = resultText;
+
+        }
+
 }
