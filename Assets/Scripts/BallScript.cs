@@ -31,6 +31,8 @@ public class LineForceKeyboard : MonoBehaviour
     private float currentPower;
     private float currentAngleDegrees;
 
+    public SoundManager soundManager;
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -107,6 +109,9 @@ public class LineForceKeyboard : MonoBehaviour
             Vector3 dir = AngleToDirection(currentAngleDegrees);
             Vector3 targetOnBallHeight = transform.position + dir * currentPower;
             Shoot(targetOnBallHeight);
+
+            //play hit sound
+            soundManager.PlayGolfHit();
         }
     }
 
