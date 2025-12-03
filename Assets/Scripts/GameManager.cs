@@ -47,7 +47,6 @@ public class GameManager : MonoBehaviour
 
     public void Exit()
     {
-        Debug.Log("peach");
         Time.timeScale = 1f;
         SceneManager.LoadScene("MainMenu");
     }
