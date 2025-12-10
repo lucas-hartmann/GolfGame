@@ -5,42 +5,38 @@ public class CameraRigController : MonoBehaviour
     [Header("Target")]
     public Transform ball;
 
+    // NEW: Assign an empty GameObject here to define the fixed view position/rotation
+    [Header("Fixed Helicopter View")]
+    public Transform fixedHelicopterView;
+
     public enum CameraMode { FollowPOV, Helicopter }
     [Header("Mode")]
     public CameraMode currentMode = CameraMode.FollowPOV;
 
-    [Header("Close View")]
+    [Header("Close View Settings")]
     public float followPitchMin = 5f;
     public float followPitchMax = 60f;
     public float followDistance = 7f;
     public float followMinDistance = 4f;
     public float followMaxDistance = 12f;
 
-    [Header("Helicopter View")]
-    public float helicopterPitch = 60f;
-    public float helicopterDistance = 20f;
-    public float helicopterMinDistance = 10f;
-    public float helicopterMaxDistance = 40f;
-
     [Header("Shared Settings")]
     public float rotateSpeed = 120f;
     public float zoomSpeed = 5f;
     public float followSmooth = 10f;
-    public float helicopterSmooth = 5f;
+    public float helicopterSmooth = 5f; // Speed of moving to the fixed spot
 
-    private float yaw;   // left/right rotation around ball
-    private float pitch; // up/down angle
+    private float yaw;
+    private float pitch;
 
     void Start()
     {
         if (!ball) return;
 
-        // Initialize yaw & pitch from current rig orientation
+        // Initialize yaw & pitch from current rig orientation relative to ball
         Vector3 dir = (transform.position - ball.position).normalized;
         pitch = Mathf.Asin(dir.y) * Mathf.Rad2Deg;
         yaw = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
-
-        // Ensure starting pitch is in a sane range
         pitch = Mathf.Clamp(pitch, followPitchMin, followPitchMax);
     }
 
@@ -51,76 +47,63 @@ public class CameraRigController : MonoBehaviour
         // ----- SWITCH MODE (C) -----
         if (Input.GetKeyDown(KeyCode.C))
         {
-            if (currentMode == CameraMode.FollowPOV)
+            // Toggle between the two modes
+            currentMode = (currentMode == CameraMode.FollowPOV)
+                ? CameraMode.Helicopter
+                : CameraMode.FollowPOV;
+        }
+
+        // Variables to store where the camera WANTS to be this frame
+        Vector3 targetPosition;
+        Quaternion targetRotation;
+        float currentSmoothSpeed;
+
+        // ----- CALCULATE BASED ON MODE -----
+        if (currentMode == CameraMode.FollowPOV)
+        {
+            // 1. Handle Rotation Input (Only in POV)
+            if (Input.GetMouseButton(1))
             {
-                currentMode = CameraMode.Helicopter;
-                pitch = helicopterPitch;          // fixed angle from above
-            }
-            else
-            {
-                currentMode = CameraMode.FollowPOV;
+                yaw += Input.GetAxis("Mouse X") * rotateSpeed * Time.deltaTime;
+                pitch -= Input.GetAxis("Mouse Y") * rotateSpeed * Time.deltaTime;
                 pitch = Mathf.Clamp(pitch, followPitchMin, followPitchMax);
             }
-        }
 
-        // ----- ROTATION WITH RMB -----
-        if (Input.GetMouseButton(1))   // hold right mouse button
-        {
-            float mouseX = Input.GetAxis("Mouse X");
-            yaw += mouseX * rotateSpeed * Time.deltaTime;
-
-            if (currentMode == CameraMode.FollowPOV)
+            // 2. Handle Zoom Input (Only in POV)
+            float scroll = Input.GetAxis("Mouse ScrollWheel");
+            if (Mathf.Abs(scroll) > 0.0001f)
             {
-                float mouseY = Input.GetAxis("Mouse Y");
-                pitch -= mouseY * rotateSpeed * Time.deltaTime;
-                pitch = Mathf.Clamp(pitch, followPitchMin, followPitchMax);
+                followDistance -= scroll * zoomSpeed;
+                followDistance = Mathf.Clamp(followDistance, followMinDistance, followMaxDistance);
+            }
+
+            // 3. Calculate Target Spot (Orbiting the ball)
+            targetRotation = Quaternion.Euler(pitch, yaw, 0f);
+            targetPosition = ball.position - (targetRotation * Vector3.forward * followDistance);
+            currentSmoothSpeed = followSmooth;
+        }
+        else // Helicopter Mode (Fixed)
+        {
+            // In this mode, we do NOT touch yaw/pitch or read inputs.
+            // We strictly fly to the fixed transform.
+            if (fixedHelicopterView != null)
+            {
+                targetPosition = fixedHelicopterView.position;
+                targetRotation = fixedHelicopterView.rotation;
             }
             else
             {
-                // helicopter mode keeps a fixed pitch
-                pitch = helicopterPitch;
+                // Fallback if you forgot to assign the transform
+                targetPosition = transform.position;
+                targetRotation = transform.rotation;
+                Debug.LogWarning("Assign a Fixed Helicopter View Transform in the Inspector!");
             }
+            currentSmoothSpeed = helicopterSmooth;
         }
 
-        // ----- ZOOM WITH SCROLL WHEEL -----
-        float scroll = Input.GetAxis("Mouse ScrollWheel");
-        if (Mathf.Abs(scroll) > 0.0001f)
-        {
-            if (currentMode == CameraMode.FollowPOV)
-            {
-                followDistance = Mathf.Clamp(
-                    followDistance - scroll * zoomSpeed,
-                    followMinDistance,
-                    followMaxDistance
-                );
-            }
-            else
-            {
-                helicopterDistance = Mathf.Clamp(
-                    helicopterDistance - scroll * zoomSpeed,
-                    helicopterMinDistance,
-                    helicopterMaxDistance
-                );
-            }
-        }
-
-        // ----- CALCULATE CAMERA POSITION -----
-        float usedDistance = (currentMode == CameraMode.FollowPOV)
-            ? followDistance
-            : helicopterDistance;
-
-        Quaternion rotation = Quaternion.Euler(pitch, yaw, 0f);
-
-        // position rig on a sphere around the ball (like a helicopter circling it)
-        Vector3 desiredPos = ball.position - (rotation * Vector3.forward * usedDistance);
-
-        float smooth = (currentMode == CameraMode.FollowPOV)
-            ? followSmooth
-            : helicopterSmooth;
-
-        Vector3 smoothedPos = Vector3.Lerp(transform.position, desiredPos, smooth * Time.deltaTime);
-
-        transform.position = smoothedPos;
-        transform.rotation = rotation;
+        // ----- APPLY MOVEMENT -----
+        // Smoothly move/rotate the camera rig to the calculated target
+        transform.position = Vector3.Lerp(transform.position, targetPosition, currentSmoothSpeed * Time.deltaTime);
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, currentSmoothSpeed * Time.deltaTime);
     }
 }
