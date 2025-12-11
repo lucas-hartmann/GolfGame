@@ -66,7 +66,7 @@ public class LineForceKeyboard : MonoBehaviour
 
         if (isIdle && !isAiming)
         {
-            if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D))
+            if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.RightArrow))
             {
                 isAiming = true;
                 if (lineRenderer != null) lineRenderer.enabled = true;
@@ -87,13 +87,13 @@ public class LineForceKeyboard : MonoBehaviour
     private void ProcessKeyboardAim()
     {
         float angleDelta = 0f;
-        if (Input.GetKey(KeyCode.A)) angleDelta -= angleSpeed * Time.deltaTime;
-        if (Input.GetKey(KeyCode.D)) angleDelta += angleSpeed * Time.deltaTime;
+        if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) angleDelta -= angleSpeed * Time.deltaTime;
+        if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) angleDelta += angleSpeed * Time.deltaTime;
         currentAngleDegrees = Mathf.Repeat(currentAngleDegrees + angleDelta, 360f);
 
         float powerDelta = 0f;
-        if (Input.GetKey(KeyCode.W)) powerDelta += powerSpeed * Time.deltaTime;
-        if (Input.GetKey(KeyCode.S)) powerDelta -= powerSpeed * Time.deltaTime;
+        if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow)) powerDelta += powerSpeed * Time.deltaTime;
+        if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow)) powerDelta -= powerSpeed * Time.deltaTime;
         currentPower = Mathf.Clamp(currentPower + powerDelta, minPower, maxPower);
 
         DrawAimLine();
