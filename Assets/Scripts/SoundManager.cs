@@ -1,31 +1,55 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class SoundManager : MonoBehaviour
 {
-    public AudioSource ambientSource;
-    public AudioSource sfxSource;
+    public static SoundManager Instance;
 
-    public AudioClip ambientClip;
-    public AudioClip golfHitClip;
+    [Header("Audio Sources")]
+    [SerializeField] private AudioSource musicSource;
+    [SerializeField] private AudioSource sfxSource;
 
-    private float ambientVolume = 0.1f;
-    private float sfxVolume = 1f;
+    [Header("Sound Effects")]
+    public AudioClip hitBallClip;
+    public AudioClip winClip;
+    public AudioClip loseClip;
+    public AudioClip buttonClickClip;
 
-    void Start()
+    private void Awake()
     {
-        ambientSource.volume = ambientVolume;
-        sfxSource.volume = sfxVolume;
-
-        // Start background sounds
-        ambientSource.clip = ambientClip;
-        ambientSource.loop = true;
-        ambientSource.Play();
+        // Singleton pattern: Ensure only one instance exists
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject); // Keeps this object alive when changing scenes
+        }
+        else
+        {
+            Destroy(gameObject); // Destroy duplicate managers from other scenes
+        }
     }
 
-    public void PlayGolfHit()
+    // Call this to play simple Sound Effects
+    public void PlaySFX(AudioClip clip)
     {
-        sfxSource.PlayOneShot(golfHitClip);
+        // PlayOneShot allows multiple sounds to overlap (e.g., fast clicking)
+        sfxSource.PlayOneShot(clip);
     }
 
+    // Specific methods for your game events (Cleaner code elsewhere)
+    public void PlayHitSound() => PlaySFX(hitBallClip);
+    public void PlayWinSound() => PlaySFX(winClip);
+    public void PlayLoseSound() => PlaySFX(loseClip);
+    public void PlayClickSound() => PlaySFX(buttonClickClip);
+
+    // Call this to change Background Music
+    public void PlayMusic(AudioClip musicClip)
+    {
+        // Only switch if the requested music is different from what's playing
+        if (musicSource.clip == musicClip) return;
+
+        musicSource.Stop();
+        musicSource.clip = musicClip;
+        musicSource.Play();
+    }
 }
-

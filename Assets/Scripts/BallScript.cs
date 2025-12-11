@@ -110,8 +110,8 @@ public class LineForceKeyboard : MonoBehaviour
             Vector3 targetOnBallHeight = transform.position + dir * currentPower;
             Shoot(targetOnBallHeight);
 
-            //play hit sound
-            soundManager.PlayGolfHit();
+            // Plays the hit sound
+            SoundManager.Instance.PlayHitSound();
         }
     }
 
