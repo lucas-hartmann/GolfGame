@@ -15,18 +15,31 @@ public class SoundManager : MonoBehaviour
     public AudioClip loseClip;
     public AudioClip buttonClickClip;
 
+    [SerializeField] private UnityEngine.Audio.AudioMixer myMixer;
+
+    void Start()
+    {
+        // Apply saved volume settings immediately
+        if (PlayerPrefs.HasKey("musicVolume"))
+        {
+            float musicVol = PlayerPrefs.GetFloat("musicVolume");
+            float sfxVol = PlayerPrefs.GetFloat("sfxVolume");
+
+            myMixer.SetFloat("MusicVol", Mathf.Log10(musicVol) * 20);
+            myMixer.SetFloat("SFXVol", Mathf.Log10(sfxVol) * 20);
+        }
+    }
+
     private void Awake()
     {
-        // Singleton pattern: Ensure only one instance exists
-        if (Instance == null)
+        if (Instance != null && Instance != this)
         {
-            Instance = this;
-            DontDestroyOnLoad(gameObject); // Keeps this object alive when changing scenes
+            Destroy(gameObject);
+            return; 
         }
-        else
-        {
-            Destroy(gameObject); // Destroy duplicate managers from other scenes
-        }
+
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
     }
 
     // Call this to play simple Sound Effects
