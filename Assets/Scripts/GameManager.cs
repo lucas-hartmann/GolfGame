@@ -24,6 +24,7 @@ public class GameManager : MonoBehaviour
         shots.text = currentShots + "/" + maxShots;
         coins.text = coinsCollected.ToString();
     }
+
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
@@ -49,6 +50,12 @@ public class GameManager : MonoBehaviour
     {
         Time.timeScale = 1f;
         SceneManager.LoadScene("MainMenu");
+    }
+
+    public void Restart()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     public void WinGame()
