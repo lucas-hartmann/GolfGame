@@ -51,6 +51,12 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene("MainMenu");
     }
 
+    public void NextLevel()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("Level 2");
+    }
+
     public void WinGame()
     {
         Debug.Log("WinMenu aufgerufen");
