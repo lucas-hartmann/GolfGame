@@ -14,6 +14,7 @@ public class SoundManager : MonoBehaviour
     public AudioClip winClip;
     public AudioClip loseClip;
     public AudioClip buttonClickClip;
+    public AudioClip coinCollectedClip;
 
     [SerializeField] private UnityEngine.Audio.AudioMixer myMixer;
 
@@ -54,6 +55,7 @@ public class SoundManager : MonoBehaviour
     public void PlayWinSound() => PlaySFX(winClip);
     public void PlayLoseSound() => PlaySFX(loseClip);
     public void PlayClickSound() => PlaySFX(buttonClickClip);
+    public void PlayCoinSound() => PlaySFX(coinCollectedClip);
 
     // Call this to change Background Music
     public void PlayMusic(AudioClip musicClip)

@@ -63,6 +63,10 @@ public class GameManager : MonoBehaviour
         CalcResText();
         Time.timeScale = 0f;
         WinMenu.SetActive(true);
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayWinSound();
+        }
     }
 
     public void LoseGame()
@@ -70,6 +74,10 @@ public class GameManager : MonoBehaviour
         Debug.Log("LoseMenu aufgerufen");
         Time.timeScale = 0f;
         LoseMenu.SetActive(true);
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayLoseSound();
+        }
     }
 
     public void RegisterShot()
@@ -90,7 +98,10 @@ public class GameManager : MonoBehaviour
         coinsCollected++;
         //Debug.Log($"Coins collected: {coinsCollected}/{amountToSpawn}");
         coins.text = coinsCollected.ToString();
-
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayCoinSound();
+        }
     }
         public void CalcResText()
         {
