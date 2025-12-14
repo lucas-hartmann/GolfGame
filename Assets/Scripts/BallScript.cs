@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class LineForceKeyboard : MonoBehaviour
+public class BallScript : MonoBehaviour
 {
     [Header("Shot Settings")]
     [SerializeField] private float shotPowerMultiplier = 6f;
@@ -31,7 +31,6 @@ public class LineForceKeyboard : MonoBehaviour
     private float currentPower;
     private float currentAngleDegrees;
 
-    public SoundManager soundManager;
 
     private void Awake()
     {
@@ -111,7 +110,10 @@ public class LineForceKeyboard : MonoBehaviour
             Shoot(targetOnBallHeight);
 
             // Plays the hit sound
-            SoundManager.Instance.PlayHitSound();
+            if (SoundManager.Instance != null)
+            {
+                SoundManager.Instance.PlayHitSound();
+            }
         }
     }
 
