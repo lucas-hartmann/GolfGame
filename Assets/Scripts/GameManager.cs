@@ -14,6 +14,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] public int coinsCollected = 0;
     [SerializeField] private float par = 2;
     public int currentShots = 0;
+    public bool hasWon = false;
 
     [Header("UI Stuff")]
     public TMP_Text shots;
@@ -23,13 +24,23 @@ public class GameManager : MonoBehaviour
     void Start(){
         shots.text = currentShots + "/" + maxShots;
         coins.text = coinsCollected.ToString();
+        hasWon = false;
     }
+
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             TogglePause();
         }
+    }
+
+    public void SeeGameOver()
+    {
+        if (GetCurrentShots() >= maxShots && hasWon == false)
+                {
+                    LoseGame();
+                }
     }
 
     private void TogglePause()
@@ -71,17 +82,18 @@ public class GameManager : MonoBehaviour
         CalcResText();
         Time.timeScale = 0f;
         WinMenu.SetActive(true);
+        hasWon = true;
     }
 
     public void LoseGame()
     {
-        Debug.Log("LoseMenu aufgerufen");
-        Time.timeScale = 0f;
-        LoseMenu.SetActive(true);
-        if (SoundManager.Instance != null)
-        {
-            SoundManager.Instance.PlayLoseSound();
-        }
+            Debug.Log("LoseMenu aufgerufen");
+            Time.timeScale = 0f;
+            LoseMenu.SetActive(true);
+            if (SoundManager.Instance != null)
+            {
+                SoundManager.Instance.PlayLoseSound();
+            }
     }
 
     public void RegisterShot()

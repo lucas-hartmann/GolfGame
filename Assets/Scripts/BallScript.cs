@@ -173,10 +173,11 @@ public class BallScript : MonoBehaviour
         rb.angularVelocity = Vector3.zero;
         isIdle = true;
 
-        if (gameManager != null && gameManager.GetCurrentShots() >= gameManager.maxShots)
+        if (gameManager != null && gameManager.GetCurrentShots() >= gameManager.maxShots+1)
         {
             gameManager.LoseGame();
         }
+
     }
 
     private void CancelAiming()
