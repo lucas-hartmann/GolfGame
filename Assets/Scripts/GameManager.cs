@@ -9,7 +9,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] GameObject WinMenu;
     [SerializeField] GameObject LoseMenu;
 
-    [Header("Keine Ahnung wia i des denn nenn")]
+    [Header("Map Difficulty")]
     [SerializeField] public int maxShots = 6;
     [SerializeField] public int coinsCollected = 0;
     [SerializeField] private float par = 2;
@@ -71,10 +71,6 @@ public class GameManager : MonoBehaviour
         CalcResText();
         Time.timeScale = 0f;
         WinMenu.SetActive(true);
-        if (SoundManager.Instance != null)
-        {
-            SoundManager.Instance.PlayWinSound();
-        }
     }
 
     public void LoseGame()

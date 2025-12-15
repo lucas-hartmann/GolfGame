@@ -29,6 +29,10 @@ public class GoalScript : MonoBehaviour
     private IEnumerator WinAfterParticles()
     {
         ParticleSystem ps = Instantiate(particlePrefab, confettiPos.position, confettiPos.rotation);
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayWinSound();
+        }
         yield return new WaitForSeconds(2);
         GameManager.WinGame();
     }
