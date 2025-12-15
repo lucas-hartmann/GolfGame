@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class GoalScript : MonoBehaviour
 {
@@ -19,6 +20,7 @@ public class GoalScript : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
+            UnlockNewLevel();
             StartCoroutine(WinAfterParticles());
              col.enabled = false;
         }
@@ -29,5 +31,15 @@ public class GoalScript : MonoBehaviour
         ParticleSystem ps = Instantiate(particlePrefab, confettiPos.position, confettiPos.rotation);
         yield return new WaitForSeconds(2);
         GameManager.WinGame();
+    }
+
+    void UnlockNewLevel()
+    {
+        if(SceneManager.GetActiveScene().buildIndex >= PlayerPrefs.GetInt("ReachedIndex"))
+        {
+            PlayerPrefs.SetInt("ReachedIndex", SceneManager.GetActiveScene().buildIndex + 1);
+            PlayerPrefs.SetInt("UnlockedLevel", PlayerPrefs.GetInt("UnlockedLevel", 1) + 1);
+            PlayerPrefs.Save();
+        }
     }
 }

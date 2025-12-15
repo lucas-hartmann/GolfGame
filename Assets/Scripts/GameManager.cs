@@ -61,7 +61,8 @@ public class GameManager : MonoBehaviour
     public void NextLevel()
     {
         Time.timeScale = 1f;
-        SceneManager.LoadScene("Level 2");
+        Scene currentScene = SceneManager.GetActiveScene();
+        SceneManager.LoadScene(currentScene.buildIndex + 1);
     }
 
     public void WinGame()
